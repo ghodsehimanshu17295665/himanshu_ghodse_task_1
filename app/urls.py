@@ -1,18 +1,19 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
+
 from .views import (
-    Home,
-    SignupView,
-    LoginView,
-    TaskListView,
-    LogoutView,
     AssignTaskView,
-    TaskDetailView,
-    TaskUpdateView,
+    Home,
+    LoginView,
+    LogoutView,
+    SignupView,
     TaskDeleteView,
-    UserListView,
+    TaskDetailView,
+    TaskListView,
     TaskStatusUpdateView,
+    TaskUpdateView,
+    UserListView,
 )
 
 urlpatterns = [

@@ -35,11 +35,11 @@
     <div class="container my-5">
         <!-- Page Heading -->
         <h1 class="text-center mb-4">Update Task Status: {{ task.title }}</h1>
-        
+
         <!-- Form to update task status -->
         <form method="POST">
             {% csrf_token %}
-            
+
             <div class="mb-3">
                 <label for="id_status" class="form-label">Status</label>
                 <select name="status" id="id_status" class="form-control">

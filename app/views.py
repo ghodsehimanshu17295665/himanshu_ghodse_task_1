@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, View
-from .forms import SignupForms, LoginForms, TaskForm, CommentForm, TaskStatusForm
-from django.contrib.auth import login, logout, authenticate
-from .models import User, Task, Comment
-from django.core.mail import send_mail
 from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
+from django.core.mail import send_mail
+from django.shortcuts import redirect, render
+from django.views.generic import TemplateView, View
+
+from .forms import CommentForm, LoginForms, SignupForms, TaskForm, TaskStatusForm
+from .models import Comment, Task, User
 
 
 # Home page
@@ -140,6 +141,7 @@ class TaskDetailView(View):
             {"task": task, "comments": comments, "form": form},
         )
 
+
 class TaskDeleteView(View):
     def post(self, request, pk):
         task = Task.objects.filter(id=pk).first()
@@ -162,15 +164,19 @@ class TaskUpdateView(View):
     def get(self, request, pk):
         task = Task.objects.filter(id=pk).first()
         form = TaskForm(instance=task)
-        return render(request, self.template_name, {'form': form, 'task': task})
+        return render(
+            request, self.template_name, {"form": form, "task": task}
+        )
 
     def post(self, request, pk):
         task = Task.objects.filter(id=pk).first()
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
-            updated_task = form.save()
-            return redirect('tasklist')
-        return render(request, self.template_name, {'form': form, 'task': task})
+            form.save()
+            return redirect("tasklist")
+        return render(
+            request, self.template_name, {"form": form, "task": task}
+        )
 
 
 class TaskStatusUpdateView(View):
@@ -179,12 +185,16 @@ class TaskStatusUpdateView(View):
     def get(self, request, pk):
         task = Task.objects.filter(id=pk).first()
         form = TaskStatusForm(instance=task)
-        return render(request, self.template_name, {'form': form, 'task': task})
-    
+        return render(
+            request, self.template_name, {"form": form, "task": task}
+        )
+
     def post(self, request, pk):
         task = Task.objects.filter(id=pk).first()
         form = TaskStatusForm(request.POST, instance=task)
         if form.is_valid():
-            update_status = form.save()
-            return redirect('tasklist')
-        return render(request, self.template_name, {'form': form, 'task': task})
+            form.save()
+            return redirect("tasklist")
+        return render(
+            request, self.template_name, {"form": form, "task": task}
+        )
