@@ -28,8 +28,6 @@ class TaskAdmin(admin.ModelAdmin):
         "priority",
         "due_date",
         "assigned_date",
-        "created_at",
-        "updated_at",
     )
 
 

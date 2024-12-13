@@ -1,11 +1,14 @@
-from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
-from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.views.generic import TemplateView, View
 
 from .forms import CommentForm, LoginForms, SignupForms, TaskForm, TaskStatusForm
 from .models import Comment, Task, User
+from .utils import (
+    send_task_email,
+    send_task_status_update_email,
+    send_task_update_email,
+)
 
 
 # Home page
@@ -69,18 +72,7 @@ class AssignTaskView(View):
             task = form.save(commit=False)
             task.creator = request.user
             task.save()
-
-            # Send email
-            assignee = task.assignee
-            subject = f"New Task Assigned: {task.title}"
-            message = f"You have been assigned a new task: {task.title}\nDescription: {task.description}\nPriority: {task.get_priority_display()}\nDue_Date: {task.due_date}"
-            send_mail(
-                subject,
-                message,
-                settings.EMAIL_HOST_USER,
-                [assignee.email],
-                fail_silently=False,
-            )
+            send_task_email(task)
             return redirect("tasklist")
         else:
             return render(request, "assign_task.html", {"form": form})
@@ -133,7 +125,6 @@ class TaskDetailView(View):
             comment.user = request.user
             comment.task = task
             comment.save()
-            return redirect("tasklist")
         comments = Comment.objects.filter(task=task)
         return render(
             request,
@@ -153,8 +144,8 @@ class UserListView(View):
     template_name = "userlist.html"
 
     def get(self, request):
-        user = User.objects.all()
-        context = {"user": user}
+        users = User.objects.all()
+        context = {"users": users}
         return render(request, self.template_name, context=context)
 
 
@@ -172,7 +163,13 @@ class TaskUpdateView(View):
         task = Task.objects.filter(id=pk).first()
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
-            form.save()
+            updated_task = form.save()
+            if updated_task.assignee:
+                send_task_update_email(
+                    assignee_email=updated_task.assignee.email,
+                    assignee_name=updated_task.assignee.username,
+                    task_title=updated_task.title,
+                )
             return redirect("tasklist")
         return render(
             request, self.template_name, {"form": form, "task": task}
@@ -193,7 +190,9 @@ class TaskStatusUpdateView(View):
         task = Task.objects.filter(id=pk).first()
         form = TaskStatusForm(request.POST, instance=task)
         if form.is_valid():
-            form.save()
+            update_status = form.save()
+            if update_status:
+                send_task_status_update_email(task)
             return redirect("tasklist")
         return render(
             request, self.template_name, {"form": form, "task": task}

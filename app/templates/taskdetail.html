@@ -64,7 +64,7 @@
           {% for comment in comments %}
             <div class="list-group-item">
               <strong>{{ comment.user.first_name }} {{ comment.user.last_name }}</strong>
-              <small class="text-muted">({{ comment.created_at|date:'F j, Y, g:i a' }})</small>
+              {% comment %} <small class="text-muted">({{ comment.created_at }})</small> {% endcomment %}
               <p>{{ comment.comment }}</p>
             </div>
           {% empty %}

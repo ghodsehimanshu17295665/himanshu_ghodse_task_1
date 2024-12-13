@@ -99,7 +99,7 @@
 
                                 <form method="POST" action="{% url 'deletetask' task.id %}" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger btn-sm">Delete Task</button>
+                                    <button type="submit" class="btn btn-danger btn-sm" style="width: 30%;">Delete Task</button>
                                 </form>
 
                             {% endif %}
