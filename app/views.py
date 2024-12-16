@@ -49,6 +49,7 @@ class LoginView(TemplateView):
             if user is not None:
                 login(request, user)
                 return redirect("tasklist")
+
         return render(request, self.template_name, {"form": form})
 
 
