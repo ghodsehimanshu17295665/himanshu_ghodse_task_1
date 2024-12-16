@@ -13,10 +13,14 @@ from .utils import (
 
 # Home page
 class Home(TemplateView):
+    """Home Page"""
+
     template_name = "index.html"
 
 
 class SignupView(View):
+    """Signup View - user Signup for task management system."""
+
     template_name = "signup.html"
 
     def get(self, request):
@@ -32,6 +36,8 @@ class SignupView(View):
 
 
 class LoginView(TemplateView):
+    """Login View - user login for task management system."""
+
     template_name = "login.html"
 
     def get(self, request):
@@ -54,12 +60,16 @@ class LoginView(TemplateView):
 
 
 class LogoutView(View):
+    """Logout View - user logout for task management system."""
+
     def get(self, request):
         logout(request)
         return redirect("home_page")
 
 
 class AssignTaskView(View):
+    """AssignTaskView - User create a Task for another user."""
+
     def get(self, request):
         users = User.objects.exclude(id=request.user.id)
         form = TaskForm()
@@ -80,6 +90,8 @@ class AssignTaskView(View):
 
 
 class TaskListView(View):
+    """TaskListView - List of all Tasks."""
+
     template_name = "tasklist.html"
 
     def get(self, request):
@@ -108,6 +120,8 @@ class TaskListView(View):
 
 
 class TaskDetailView(View):
+    """TaskDetailView - Perticular Task related detail."""
+
     def get(self, request, pk):
         task = Task.objects.get(id=pk)
         comments = Comment.objects.filter(task=task)
@@ -135,6 +149,8 @@ class TaskDetailView(View):
 
 
 class TaskDeleteView(View):
+    """TaskDeleteView - User Delete a task."""
+
     def post(self, request, pk):
         task = Task.objects.filter(id=pk).first()
         task.delete()
@@ -142,6 +158,8 @@ class TaskDeleteView(View):
 
 
 class UserListView(View):
+    """UserListView - List of all Users."""
+
     template_name = "userlist.html"
 
     def get(self, request):
@@ -151,6 +169,8 @@ class UserListView(View):
 
 
 class TaskUpdateView(View):
+    """TaskUpdateView - User Update a task"""
+
     template_name = "taskupdate.html"
 
     def get(self, request, pk):
@@ -178,6 +198,8 @@ class TaskUpdateView(View):
 
 
 class TaskStatusUpdateView(View):
+    """TaskStatusUpdateView - User Update a task status."""
+
     template_name = "task_status_update.html"
 
     def get(self, request, pk):

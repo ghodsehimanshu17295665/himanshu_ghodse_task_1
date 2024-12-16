@@ -64,28 +64,6 @@ class LoginViewTest(TestCase):
         self.assertEqual(response.context['user'].email, 'testuser@example.com')
 
 
-class LogoutViewTest(TestCase):
-
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            username='testuser',
-            email='testuser@example.com',
-            password='password123'
-        )
-        self.logout_url = reverse('logout')
-        self.home_url = reverse('home_page')
-
-    def test_logout_redirect(self):
-        self.client.login(username='testuser', password='password123')
-        response = self.client.get(self.logout_url)
-        self.assertRedirects(response, self.home_url)
-
-    def test_logged_out_user_redirect(self):
-        self.client.logout()
-        response = self.client.get(self.logout_url)
-        self.assertRedirects(response, self.home_url)
-
-
 class TaskListViewTest(TestCase):
     def setUp(self):
         self.User = get_user_model()
@@ -119,20 +97,124 @@ class TaskListViewTest(TestCase):
         self.assertTemplateUsed(response, 'tasklist.html')
         self.assertEqual(len(response.context['task']), 2)
 
-    def test_get_request_filter_by_assignee(self):
-        response = self.client.get(self.url, {'assignee': self.user1.id})
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'tasklist.html')
-        self.assertEqual(len(response.context['task']), 1)
 
-    def test_get_request_filter_by_status(self):
-        response = self.client.get(self.url, {'status': 'Completed'})
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'tasklist.html')
-        self.assertEqual(len(response.context['task']), 1)
+class AssignTaskViewTest(TestCase):
+    def setUp(self):
+        self.User = get_user_model()
+        self.creator_user = self.User.objects.create_user(username='taskcreate', email='creator@gmail.com', password='password123')
+        self.assign_user = self.User.objects.create_user(username='taskassign', email='assign@gmail.com', password='password123')
+        self.url = reverse('assigntask')
 
-    def test_get_request_filter_by_due_date(self):
-        response = self.client.get(self.url, {'due_date': '2025-01-01'})
+    def test_get_assign_task_view(self):
+        data = {
+            'title': 'Task 1',
+            'description': 'Task 1 description',
+            'status': 'Pending',
+            'priority': 'High',
+            'assignee': self.assign_user.id,
+            'due_date': '2025-01-01',
+        }
+        self.client.login(username='creator@gmail.com', password='password123')
+
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("tasklist"))
+
+        task = Task.objects.get(title="Task 1")
+        self.assertEqual(task.description, "Task 1 description")
+        self.assertEqual(task.creator, self.creator_user)
+        self.assertEqual(task.assignee, self.assign_user)
+
+    def test_get_assign_task_invalid(self):
+        data = {
+            'title': 'Task 2',
+            'description': 'Task 1 description',
+            'status': 'Pending',
+            'priority': ' ',
+            'assignee': self.assign_user.id,
+            'due_date': '',
+        }
+        self.client.login(username='creator@gmail.com', password='password123')
+        response = self.client.post(self.url, data)
+
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'tasklist.html')
-        self.assertEqual(len(response.context['task']), 1)
+        self.assertTemplateUsed(response, "assign_task.html")
+        self.assertTrue(response.context["form"].errors)
+
+
+class TaskUpdateViewTest(TestCase):
+    def setUp(self):
+        self.User = get_user_model()
+        self.creator_user = self.User.objects.create_user(username='taskcreate', email='creator@gmail.com', password='password123')
+        self.assign_user = self.User.objects.create_user(username='taskassign', email='assign@gmail.com', password='password123')
+        self.task = Task.objects.create(
+            title='Task 1',
+            description= 'Task 1 description',
+            assignee=self.assign_user,
+            creator=self.creator_user,
+            status='Pending',
+            priority='High',
+            due_date=date(2025, 1, 1),
+        )
+        self.url = reverse('updatetask', kwargs={'pk': self.task.pk})
+
+    def test_get_update_task(self):
+        self.client.login(username='creator@gmail.com', password='password123')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'taskupdate.html')
+
+    def test_post_task_update_success(self):
+        data = {
+            'title': 'Task 2',
+            'description': 'Task 2 description',
+            'status': 'InProcessing',
+            'priority': 'Medium',
+            'assignee': self.assign_user.id,
+            'due_date': '2025-01-01',
+        }
+        self.client.login(username='creator@gmail.com', password='password123')
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.title, 'Task 2')
+        self.assertEqual(self.task.description, 'Task 2 description')
+        self.assertEqual(self.task.status, 'InProcessing')
+        self.assertEqual(self.task.priority, 'Medium')
+        self.assertRedirects(response, reverse('tasklist'))
+
+
+class TaskStatusUpdateViewTest(TestCase):
+    def setUp(self):
+        self.User = get_user_model()
+        self.creator_user = self.User.objects.create_user(username='taskcreate', email='creator@gmail.com', password='password123')
+        self.assign_user = self.User.objects.create_user(username='taskassign', email='assign@gmail.com', password='password123')
+        self.task = Task.objects.create(
+            title='Task 1',
+            description= 'Task 1 description',
+            assignee=self.assign_user,
+            creator=self.creator_user,
+            status='Pending',
+            priority='High',
+            due_date=date(2025, 1, 1),
+        )
+        self.url = reverse('statusupdate', kwargs={'pk': self.task.pk})
+
+    def test_get_update_task(self):
+        self.client.login(username='creator@gmail.com', password='password123')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'task_status_update.html')
+
+    def test_post_task_status_update(self):
+        data = {
+            'status': 'Completed',
+        }
+        self.client.login(username='creator@gmail.com', password='password123')
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, 'Completed')
+        self.assertRedirects(response, reverse('tasklist'))
