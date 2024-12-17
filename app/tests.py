@@ -98,13 +98,35 @@ class TaskListViewTest(TestCase):
         self.assertTemplateUsed(response, 'tasklist.html')
         self.assertEqual(len(response.context['task']), 2)
 
+    def test_get_request_filter_assignee(self):
+        response = self.client.get(self.url, {'assignee': self.user1.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tasklist.html')
+        self.assertEqual(len(response.context['task']), 1)
+        self.assertEqual(response.context['task'][0].assignee, self.user1)
+
+    def test_get_request_filter_status(self):
+        response = self.client.get(self.url, {'status': 'Completed'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tasklist.html')
+        self.assertEqual(len(response.context['task']), 1)
+        self.assertEqual(response.context['task'][0].status, 'Completed')
+
+    def test_get_request_filter_due_date(self):
+        response = self.client.get(self.url, {'due_date': '2025-01-01'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tasklist.html')
+        self.assertEqual(len(response.context['task']), 1)
+        self.assertEqual(response.context['task'][0].due_date, date(2025, 1, 1))
+
 
 class AssignTaskViewTest(TestCase):
+
     def setUp(self):
         self.User = get_user_model()
         self.creator_user = self.User.objects.create_user(username='taskcreate', email='creator@gmail.com', password='password123')
         self.assign_user = self.User.objects.create_user(username='taskassign', email='assign@gmail.com', password='password123')
-        self.url = reverse('assigntask')
+        self.url = reverse('assign_task')
 
     def test_get_assign_task_view(self):
         data = {
@@ -119,7 +141,7 @@ class AssignTaskViewTest(TestCase):
 
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse("tasklist"))
+        self.assertRedirects(response, reverse("task_list"))
 
         task = Task.objects.get(title="Task 1")
         self.assertEqual(task.description, "Task 1 description")
@@ -144,6 +166,7 @@ class AssignTaskViewTest(TestCase):
 
 
 class TaskUpdateViewTest(TestCase):
+
     def setUp(self):
         self.User = get_user_model()
         self.creator_user = self.User.objects.create_user(username='taskcreate', email='creator@gmail.com', password='password123')
@@ -157,7 +180,7 @@ class TaskUpdateViewTest(TestCase):
             priority='High',
             due_date=date(2025, 1, 1),
         )
-        self.url = reverse('updatetask', kwargs={'pk': self.task.pk})
+        self.url = reverse('update_task', kwargs={'pk': self.task.pk})
 
     def test_get_update_task(self):
         self.client.login(username='creator@gmail.com', password='password123')
@@ -183,10 +206,11 @@ class TaskUpdateViewTest(TestCase):
         self.assertEqual(self.task.description, 'Task 2 description')
         self.assertEqual(self.task.status, 'InProcessing')
         self.assertEqual(self.task.priority, 'Medium')
-        self.assertRedirects(response, reverse('tasklist'))
+        self.assertRedirects(response, reverse('task_list'))
 
 
 class TaskStatusUpdateViewTest(TestCase):
+
     def setUp(self):
         self.User = get_user_model()
         self.creator_user = self.User.objects.create_user(username='taskcreate', email='creator@gmail.com', password='password123')
@@ -200,7 +224,7 @@ class TaskStatusUpdateViewTest(TestCase):
             priority='High',
             due_date=date(2025, 1, 1),
         )
-        self.url = reverse('statusupdate', kwargs={'pk': self.task.pk})
+        self.url = reverse('status_update', kwargs={'pk': self.task.pk})
 
     def test_get_update_task(self):
         self.client.login(username='creator@gmail.com', password='password123')
@@ -218,4 +242,4 @@ class TaskStatusUpdateViewTest(TestCase):
 
         self.task.refresh_from_db()
         self.assertEqual(self.task.status, 'Completed')
-        self.assertRedirects(response, reverse('tasklist'))
+        self.assertRedirects(response, reverse('task_list'))
