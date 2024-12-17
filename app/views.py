@@ -42,7 +42,7 @@ class LoginView(TemplateView):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect("tasklist")
+            return redirect("task_list")
         form = LoginForms()
         return render(request, self.template_name, {"form": form})
 
@@ -54,7 +54,7 @@ class LoginView(TemplateView):
             user = authenticate(request, username=email, password=password)
             if user is not None:
                 login(request, user)
-                return redirect("tasklist")
+                return redirect("task_list")
 
         return render(request, self.template_name, {"form": form})
 
@@ -84,7 +84,7 @@ class AssignTaskView(View):
             task.creator = request.user
             task.save()
             send_task_email(task)
-            return redirect("tasklist")
+            return redirect("task_list")
         else:
             return render(request, "assign_task.html", {"form": form})
 
@@ -154,7 +154,7 @@ class TaskDeleteView(View):
     def post(self, request, pk):
         task = Task.objects.filter(id=pk).first()
         task.delete()
-        return redirect("tasklist")
+        return redirect("task_list")
 
 
 class UserListView(View):
@@ -191,7 +191,7 @@ class TaskUpdateView(View):
                     assignee_name=updated_task.assignee.username,
                     task_title=updated_task.title,
                 )
-            return redirect("tasklist")
+            return redirect("task_list")
         return render(
             request, self.template_name, {"form": form, "task": task}
         )
@@ -216,7 +216,7 @@ class TaskStatusUpdateView(View):
             update_status = form.save()
             if update_status:
                 send_task_status_update_email(task)
-            return redirect("tasklist")
+            return redirect("task_list")
         return render(
             request, self.template_name, {"form": form, "task": task}
         )

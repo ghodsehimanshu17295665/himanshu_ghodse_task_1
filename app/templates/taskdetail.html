@@ -21,8 +21,8 @@
       </div>
       <div class="auth-buttons" style="display: flex; gap: 10px;">
         {% if user.is_authenticated %}
-          <button onclick="window.location.href='{% url 'userlist' %}'">Users List</button>
-          <button onclick="window.location.href='{% url 'assigntask' %}'">Assign Task</button>
+          <button onclick="window.location.href='{% url 'user_list' %}'">Users List</button>
+          <button onclick="window.location.href='{% url 'assign_task' %}'">Assign Task</button>
           <button onclick="window.location.href='{% url 'logout' %}'">Logout</button>
         {% else %}
           <button onclick="window.location.href='{% url 'signup' %}'">Signup</button>
@@ -64,7 +64,6 @@
           {% for comment in comments %}
             <div class="list-group-item">
               <strong>{{ comment.user.first_name }} {{ comment.user.last_name }}</strong>
-              {% comment %} <small class="text-muted">({{ comment.created_at }})</small> {% endcomment %}
               <p>{{ comment.comment }}</p>
             </div>
           {% empty %}
@@ -88,7 +87,7 @@
       {% endif %}
 
       <div class="cta mt-4">
-        <a href="{% url 'tasklist' %}" class="btn btn-secondary">Back to Task List</a>
+        <a href="{% url 'task_list' %}" class="btn btn-secondary">Back to Task List</a>
       </div>
     </div>
 
