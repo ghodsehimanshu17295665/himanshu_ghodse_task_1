@@ -22,8 +22,8 @@
           </div>
           <div class="auth-buttons">
             {% if user.is_authenticated %}
-              <button onclick="window.location.href='{% url 'userlist' %}'">Users List</button>
-              <button onclick="window.location.href='{% url 'assigntask' %}'">Assign Task</button>
+              <button onclick="window.location.href='{% url 'user_list' %}'">Users List</button>
+              <button onclick="window.location.href='{% url 'assign_task' %}'">Assign Task</button>
               <button onclick="window.location.href='{% url 'logout' %}'">Logout</button>
             {% else %}
               <button onclick="window.location.href='{% url 'signup' %}'">Signup</button>
@@ -66,7 +66,7 @@
     </div>
 
     <div class="cta mt-4">
-        <a href="{% url 'tasklist' %}" class="btn btn-secondary">Back to Task List</a>
+        <a href="{% url 'task_list' %}" class="btn btn-secondary">Back to Task List</a>
     </div>
 
     <!-- Optional: Add Bootstrap JS for additional functionality -->
