@@ -2,8 +2,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect, render
 from django.views.generic import TemplateView, View
 
-from .forms import CommentForm, LoginForms, SignupForms, TaskForm, TaskStatusForm
-from .models import Comment, Task, User
+from .forms import CommentForm, LoginForms, SignupForms, SubTaskForm, TaskForm
+from .models import Comment, SubTask, Task, User
 from .utils import (
     send_task_email,
     send_task_status_update_email,
@@ -84,9 +84,40 @@ class AssignTaskView(View):
             task.creator = request.user
             task.save()
             send_task_email(task)
-            return redirect("task_list")
+            return redirect("create_subtask", task_id=task.id)
         else:
             return render(request, "assign_task.html", {"form": form})
+
+
+class SubTaskView(View):
+    """SubTaskView - User create a Task for another user."""
+
+    def get(self, request, task_id):
+        task = Task.objects.filter(id=task_id).first()
+        subtask_form = SubTaskForm()
+        return render(
+            request,
+            "sub_task.html",
+            {"task": task, "subtask_form": subtask_form},
+        )
+
+    def post(self, request, task_id):
+        task = Task.objects.filter(id=task_id).first()
+
+        form = SubTaskForm(request.POST)
+        if form.is_valid():
+            subtask = form.save(commit=False)
+            subtask.task = task
+            subtask.save()
+
+        subtasks = task.subtasks.all()
+        subtask_form = SubTaskForm()
+
+        return render(
+            request,
+            "sub_task.html",
+            {"task": task, "subtask_form": subtask_form, "subtasks": subtasks},
+        )
 
 
 class TaskListView(View):
@@ -125,11 +156,17 @@ class TaskDetailView(View):
     def get(self, request, pk):
         task = Task.objects.get(id=pk)
         comments = Comment.objects.filter(task=task)
+        subtasks = task.subtasks.all()
         form = CommentForm()
         return render(
             request,
             "taskdetail.html",
-            {"task": task, "comments": comments, "form": form},
+            {
+                "task": task,
+                "subtasks": subtasks,
+                "comments": comments,
+                "form": form,
+            },
         )
 
     def post(self, request, pk):
@@ -141,10 +178,16 @@ class TaskDetailView(View):
             comment.task = task
             comment.save()
         comments = Comment.objects.filter(task=task)
+        subtasks = task.subtasks.all()
         return render(
             request,
             "taskdetail.html",
-            {"task": task, "comments": comments, "form": form},
+            {
+                "task": task,
+                "subtasks": subtasks,
+                "comments": comments,
+                "form": form,
+            },
         )
 
 
@@ -174,11 +217,15 @@ class TaskUpdateView(View):
     template_name = "taskupdate.html"
 
     def get(self, request, pk):
-        task = Task.objects.filter(id=pk).first()
-        form = TaskForm(instance=task)
-        return render(
-            request, self.template_name, {"form": form, "task": task}
-        )
+        user_id = request.user.id
+        task = Task.objects.filter(id=pk, creator=user_id).first()
+        if task:
+            form = TaskForm(instance=task)
+            return render(
+                request, self.template_name, {"form": form, "task": task}
+            )
+        else:
+            return redirect("task_list")
 
     def post(self, request, pk):
         task = Task.objects.filter(id=pk).first()
@@ -198,25 +245,62 @@ class TaskUpdateView(View):
 
 
 class TaskStatusUpdateView(View):
-    """TaskStatusUpdateView - User Update a task status."""
+    """TaskStatusUpdateView - User Update a task Status"""
 
     template_name = "task_status_update.html"
 
     def get(self, request, pk):
+        # Fetch the main task and its associated sub-tasks
         task = Task.objects.filter(id=pk).first()
-        form = TaskStatusForm(instance=task)
+        sub_tasks = SubTask.objects.filter(task=task)
+
+        if not request.user == task.assignee:
+            return redirect("task_list")
+
         return render(
-            request, self.template_name, {"form": form, "task": task}
+            request,
+            self.template_name,
+            {
+                "task": task,
+                "sub_tasks": sub_tasks,
+            },
         )
 
     def post(self, request, pk):
+        # Fetch the main task and its sub-tasks
         task = Task.objects.filter(id=pk).first()
-        form = TaskStatusForm(request.POST, instance=task)
-        if form.is_valid():
-            update_status = form.save()
-            if update_status:
-                send_task_status_update_email(task)
-            return redirect("task_list")
-        return render(
-            request, self.template_name, {"form": form, "task": task}
-        )
+        sub_tasks = SubTask.objects.filter(task=task)
+
+        if sub_tasks.exists():
+            # Update sub-task statuses from the form submission
+            for sub_task in sub_tasks:
+                new_status = request.POST.get(f"sub_task_status_{sub_task.id}")
+                if new_status in ["Pending", "InProcessing", "Completed"]:
+                    sub_task.status = new_status
+                    sub_task.save()
+
+            all_completed = True
+            any_in_processing = False
+
+            for sub_task in sub_tasks:
+                if sub_task.status != "Completed":
+                    all_completed = False
+                if sub_task.status == "InProcessing":
+                    any_in_processing = True
+
+            if all_completed:
+                task.status = "Completed"
+            elif any_in_processing:
+                task.status = "InProcessing"
+            else:
+                task.status = "Pending"
+
+        else:
+            # If no sub-tasks exist, allow direct updating of the main task's status
+            new_task_status = request.POST.get("task_status")
+            if new_task_status in ["Pending", "InProcessing", "Completed"]:
+                task.status = new_task_status
+
+        task.save()
+        send_task_status_update_email(task)
+        return redirect("task_list")

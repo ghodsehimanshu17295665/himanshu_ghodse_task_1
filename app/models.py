@@ -55,3 +55,23 @@ class Comment(TimeStampedModel):
 
     def __str__(self):
         return f"comment by {self.user.email} on {self.task.title}"
+
+
+class SubTask(TimeStampedModel):
+    STATUS_CHOICES = [
+        ("Pending", "Pending"),
+        ("InProcessing", "InProcessing"),
+        ("Completed", "Completed"),
+    ]
+    task = models.ForeignKey(
+        Task, on_delete=models.CASCADE, related_name="subtasks"
+    )
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    status = models.CharField(
+        max_length=50, choices=STATUS_CHOICES, default="InProcessing"
+    )
+
+    def __str__(self):
+        return self.title

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Create Sub-Tasks for: {{ task.title }}</h1>
+
+    <h2>Sub-Tasks</h2>
+    <ul>
+        {% for subtask in subtasks %}
+            <li>{{ subtask.title }} - {{ subtask.status }}</li>
+        {% endfor %}
+    </ul>
+
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ subtask_form.as_p }}
+        <button type="submit">Add Sub-Task</button>
+    </form>
+
+
+    <a href="{% url 'detail_task' task.id %}">Finish</a>
+{% endblock %}

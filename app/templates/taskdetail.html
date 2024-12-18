@@ -57,6 +57,35 @@
         </div>
       </div>
 
+      <!-- Sub-Tasks Section -->
+      <div class="subtasks mt-5">
+        <h5>Sub-Tasks</h5>
+        {% if subtasks %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Id</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for subtask in subtasks %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ subtask.title }}</td>
+              <td>{{ subtask.description }}</td>
+              <td>{{ subtask.status }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No sub-tasks for this task yet.</p>
+        {% endif %}
+      </div>
+
       <!-- Comments Section -->
       <div class="comments mb-4">
         <h5>Comments</h5>

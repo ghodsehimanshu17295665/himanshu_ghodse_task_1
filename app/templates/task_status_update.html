@@ -1,64 +1,64 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Task Status - Task Management System</title>
+    <title>Update Task Status</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
     <!-- Header Section -->
     <header style="background-color: #003366; color: white; padding: 10px 20px;">
-        <div class="welcome-message">
-            {% if user.is_authenticated %}
-                Welcome to "{{ user.first_name }} {{ user.last_name }}" Task Management System
-            {% else %}
-                Welcome to the Task Management System
-            {% endif %}
-        </div>
-        <div class="auth-buttons" style="display: flex; gap: 10px;">
-            {% if user.is_authenticated %}
-                <button onclick="window.location.href='{% url 'user_list' %}'">Users List</button>
-                <button onclick="window.location.href='{% url 'assign_task' %}'">Assign Task</button>
-                <button onclick="window.location.href='{% url 'logout' %}'">Logout</button>
-            {% else %}
-                <button onclick="window.location.href='{% url 'signup' %}'">Signup</button>
-                <button onclick="window.location.href='{% url 'login' %}'">Login</button>
-            {% endif %}
-        </div>
+        <h1>Task Management System</h1>
     </header>
 
     <div class="container my-5">
-        <!-- Page Heading -->
-        <h1 class="text-center mb-4">Update Task Status: {{ task.title }}</h1>
+        <!-- Main Task Details -->
+        <h2>Update Task Status</h2>
+        <div class="mb-3">
+            <h4>Main Task: {{ task.title }}</h4>
+            <p>Current Status: <strong>{{ task.status }}</strong></p>
+        </div>
 
-        <!-- Form to update task status -->
+        <!-- Form for updating task statuses -->
         <form method="POST">
             {% csrf_token %}
 
-            <div class="mb-3">
-                <label for="id_status" class="form-label">Status</label>
-                <select name="status" id="id_status" class="form-control">
-                    {% for choice in form.status.field.choices %}
-                        <option value="{{ choice.0 }}" {% if choice.0 == form.status.value %} selected {% endif %}>
-                            {{ choice.1 }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+            {% if sub_tasks %}
+                <!-- Sub-task statuses -->
+                <h3>Sub-Tasks</h3>
+                {% for sub_task in sub_tasks %}
+                    <div class="mb-3">
+                        <label for="sub_task_{{ sub_task.id }}">
+                            {{ sub_task.title }} (Current Status: {{ sub_task.get_status_display }})
+                        </label>
+                        <select name="sub_task_status_{{ sub_task.id }}" id="sub_task_{{ sub_task.id }}" class="form-control">
+                            <option value="Pending" {% if sub_task.status == "Pending" %}selected{% endif %}>Pending</option>
+                            <option value="InProcessing" {% if sub_task.status == "InProcessing" %}selected{% endif %}>In Processing</option>
+                            <option value="Completed" {% if sub_task.status == "Completed" %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                {% endfor %}
+                <p class="text-muted">Main task status will be updated automatically based on the sub-tasks.</p>
+            {% else %}
+                <!-- Dropdown for main task status if no sub-tasks exist -->
+                <div class="mb-3">
+                    <label for="task_status">Update Main Task Status</label>
+                    <select name="task_status" id="task_status" class="form-control">
+                        <option value="Pending" {% if task.status == "Pending" %}selected{% endif %}>Pending</option>
+                        <option value="InProcessing" {% if task.status == "InProcessing" %}selected{% endif %}>In Processing</option>
+                        <option value="Completed" {% if task.status == "Completed" %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+            {% endif %}
 
-            <button type="submit" class="btn btn-success">Save Status</button>
+            <button type="submit" class="btn btn-success">Save Changes</button>
         </form>
 
-        <!-- Back to Task List Button -->
+        <!-- Back Button -->
         <a href="{% url 'task_list' %}" class="btn btn-secondary mt-3">Back to Task List</a>
     </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
