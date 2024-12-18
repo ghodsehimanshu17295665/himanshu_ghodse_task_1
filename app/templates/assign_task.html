@@ -1,62 +1,84 @@
 {% extends "base.html" %}
 
-{% block title %}Assign Task{% endblock %}
-
 {% block content %}
     <div class="container">
-        <h1>Create and Assign Task</h1>
+        <h1>Assign a Task</h1>
 
-        <form method="POST">
+        <!-- Task Form -->
+        <form method="POST" action="{% url 'assign_task' %}">
             {% csrf_token %}
 
             <div class="form-group">
                 <label for="title">Task Title</label>
-                <input type="text" name="title" id="title" value="{{ form.title.value }}" placeholder="Enter task title" required>
+                <input
+                    type="text"
+                    name="title"
+                    id="title"
+                    class="form-control"
+                    placeholder="Enter task title"
+                    value="{{ form.title.value }}"
+                    required
+                />
             </div>
 
             <div class="form-group">
                 <label for="description">Task Description</label>
-                <textarea name="description" id="description" placeholder="Enter task description" rows="4" required>{{ form.description.value }}</textarea>
+                <textarea
+                    name="description"
+                    id="description"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Enter task description"
+                    required
+                >{{ form.description.value }}</textarea>
             </div>
 
             <div class="form-group">
-                <label for="assignee">Assign to</label>
-                <select name="assignee" id="assignee" required>
-                    <option value="" disabled selected>Select User</option>
+                <label for="assignee">Assign To</label>
+                <select name="assignee" id="assignee" class="form-control" required>
+                    <option value="" disabled selected>Select a user</option>
                     {% for user in users %}
-                        <option value="{{ user.id }}" {% if form.assignee.value == user.id %} selected {% endif %}>{{ user.first_name }} {{ user.last_name }}</option>
+                        <option value="{{ user.id }}" {% if form.assignee.value == user.id|stringformat:"s" %}selected{% endif %}>
+                            {{ user.first_name }} {{ user.last_name }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="status">status</label>
-                <select name="status" id="status" required>
-                    <option value="Pending">Pending</option>
+                <label for="status">Status</label>
+                <select name="status" id="status" class="form-control" required>
+                    <option value="Pending" {% if form.status.value == "Pending" %}selected{% endif %}>Pending</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="priority">Priority</label>
-                <select name="priority" id="priority" required>
-                    <option value="Low" {% if form.priority.value == 'Low' %} selected {% endif %}>Low</option>
-                    <option value="Medium" {% if form.priority.value == 'Medium' %} selected {% endif %}>Medium</option>
-                    <option value="High" {% if form.priority.value == 'High' %} selected {% endif %}>High</option>
+                <select name="priority" id="priority" class="form-control" required>
+                    <option value="Low" {% if form.priority.value == "Low" %}selected{% endif %}>Low</option>
+                    <option value="Medium" {% if form.priority.value == "Medium" %}selected{% endif %}>Medium</option>
+                    <option value="High" {% if form.priority.value == "High" %}selected{% endif %}>High</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="due_date">Due Date</label>
-                <input type="date" name="due_date" id="due_date" value="{{ form.due_date.value }}" required>
+                <input
+                    type="date"
+                    name="due_date"
+                    id="due_date"
+                    class="form-control"
+                    value="{{ form.due_date.value }}"
+                    required
+                />
             </div>
 
-            <div class="form-group">
-                <button type="submit">Create and Assign Task</button>
-            </div>
+            <button type="submit" class="btn btn-primary">Create Task</button>
         </form>
 
         <div class="cta">
-            <p><a href="{% url 'task_list' %}">View all tasks</a></p>
+            <a href="{% url 'task_list' %}" class="btn btn-secondary">Back to Task List</a>
         </div>
+
     </div>
 {% endblock %}
