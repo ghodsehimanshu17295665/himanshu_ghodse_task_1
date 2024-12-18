@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Comment, Task, User
+from .models import Comment, SubTask, Task, User
 
 
 @admin.register(User)
@@ -35,3 +35,9 @@ class TaskAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     model = Comment
     list_display = ("id", "comment", "user", "task")
+
+
+@admin.register(SubTask)
+class SubTaskAdmin(admin.ModelAdmin):
+    model = SubTask
+    list_display = ("id", "title", "description", "status", "task")
