@@ -78,6 +78,8 @@ jobs:
             echo "Waiting for PostgreSQL..."
             sleep 2
           done
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
 
       - name: Run Django tests
         run: |
