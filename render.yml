@@ -3,7 +3,7 @@ services:
     name: himanshu-task
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app.wsgi"
+    startCommand: "gunicorn task.wsgi"
     envVars:
       - key: DEBUG
         value: "False"
