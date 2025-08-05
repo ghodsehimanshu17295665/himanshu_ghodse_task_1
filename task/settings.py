@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
-import dj_database_url
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -111,24 +110,18 @@ WSGI_APPLICATION = "task.wsgi.application"
 #         'PORT': os.getenv('DB_PORT', '5432'),
 #     }
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'taskmanagement'),
+        'USER': os.getenv('POSTGRES_USER', 'taskuser'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'securepassword123'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432')
+    }
+}
 
-if os.getenv("RENDER"):
-    # On Render or production
-    DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
-    }
-else:
-    # Local development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('POSTGRES_DB', 'taskmanagement'),
-            'USER': os.getenv('POSTGRES_USER', 'taskuser'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'securepassword123'),
-            'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
-            'PORT': os.getenv('POSTGRES_PORT', '5432')
-        }
-    }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
