@@ -123,18 +123,18 @@ WSGI_APPLICATION = "task.wsgi.application"
 #     }
 # }
 
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=False  # In CI, you don't need SSL
+            ssl_require=True
         )
     }
 else:
-    # Fallback for CI or local dev without DATABASE_URL
+    # Local development fallback (used when DATABASE_URL is not set)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -145,6 +145,7 @@ else:
             'PORT': os.getenv('POSTGRES_PORT', '5432'),
         }
     }
+
 
 
 # Password validation

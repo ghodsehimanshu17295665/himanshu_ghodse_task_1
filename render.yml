@@ -4,9 +4,12 @@ services:
     env: python
     buildCommand: |
       pip install -r requirements.txt
+      until pg_isready -h $DATABASE_HOST -p 5432 -U $DATABASE_USER; do
+        echo "Waiting for database..."
+        sleep 5
+      done
       python manage.py collectstatic --noinput
       python manage.py migrate
-
     startCommand: "gunicorn task.wsgi"
     envVars:
       - key: DEBUG
