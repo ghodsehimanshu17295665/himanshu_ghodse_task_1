@@ -111,23 +111,32 @@ WSGI_APPLICATION = "task.wsgi.application"
 #         'PORT': os.getenv('DB_PORT', '5432'),
 #     }
 # }
+# 06/08/25 :-
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('POSTGRES_DB', 'taskmanagement'),
+#         'USER': os.getenv('POSTGRES_USER', 'taskuser'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'securepassword123'),
+#         'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+#         'PORT': os.getenv('POSTGRES_PORT', '5432')
+#     }
+# }
+
+
+# # Override if DATABASE_URL is available (Render or Production)
+# DATABASE_URL = os.getenv('DATABASE_URL')
+
+# if DATABASE_URL:
+#     DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'taskmanagement'),
-        'USER': os.getenv('POSTGRES_USER', 'taskuser'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'securepassword123'),
-        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432')
-    }
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
-
-
-# Override if DATABASE_URL is available (Render or Production)
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-if DATABASE_URL:
-    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
