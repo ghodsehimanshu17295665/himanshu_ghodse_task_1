@@ -4,7 +4,7 @@ services:
     env: python
     buildCommand: |
       pip install -r requirements.txt
-      python manage.py collectstatic --noinput  # Build phase - no DB access
+      python manage.py collectstatic --noinput  # Build only static files
     startCommand: |
       python manage.py migrate && gunicorn task.wsgi
     envVars:
