@@ -123,20 +123,29 @@ WSGI_APPLICATION = "task.wsgi.application"
 #     }
 # }
 
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-# # Override if DATABASE_URL is available (Render or Production)
-# DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=False  # In CI, you don't need SSL
+        )
+    }
+else:
+    # Fallback for CI or local dev without DATABASE_URL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'taskmanagement'),
+            'USER': os.getenv('POSTGRES_USER', 'taskuser'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'securepassword123'),
+            'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        }
+    }
 
-# if DATABASE_URL:
-#     DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
