@@ -11,9 +11,13 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+# Add at the top with other imports
+from urllib.parse import urlparse
 
 load_dotenv()
 
@@ -25,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
@@ -34,13 +38,13 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = []
 
 # Add Render's hostname and your custom domain when available
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    
+
 # For local development
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1'])
+    ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
 
 
 # Application definition
@@ -90,33 +94,35 @@ WSGI_APPLICATION = "task.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# Database configuration for Render and local development
-if os.environ.get('DATABASE_URL'):
+
+# Database Configuration
+if os.environ.get("DATABASE_URL"):
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600,
-            ssl_require=True,
-            conn_health_checks=True,
-        )
-    }
+
+    db_from_env = dj_database_url.config(
+        conn_max_age=600, ssl_require=True, conn_health_checks=True
+    )
+    DATABASES = {"default": db_from_env}
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('POSTGRES_DB', 'taskmanagement'),
-            'USER': os.getenv('POSTGRES_USER', 'taskuser'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'securepassword123'),
-            'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
-            'PORT': os.getenv('POSTGRES_PORT', '5432'),
-            'OPTIONS': {
-                'sslmode': 'require',  # Force SSL
-                'connect_timeout': 5,  # 5-second timeout
-            },
-            'CONN_MAX_AGE': 600,
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB", "taskmanagement"),
+            "USER": os.getenv("POSTGRES_USER", "taskuser"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "securepassword123"),
+            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+            "PORT": os.getenv("POSTGRES_PORT", "5432"),
         }
     }
+
+# Special CI/Test Configuration (ADD THIS NEW BLOCK)
+if "test" in sys.argv or os.getenv("CI", "").lower() == "true":
+    DATABASES["default"].update(
+        {
+            "NAME": "test_" + DATABASES["default"]["NAME"],
+            "OPTIONS": {"sslmode": "disable"},  # Disable SSL for tests
+        }
+    )
 
 
 # Password validation
@@ -172,7 +178,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "app.User"
 
 # Email configuration
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+)
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
@@ -183,16 +191,16 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 if not DEBUG:
     # Ensure HTTPS is used
     SECURE_SSL_REDIRECT = True
-    
+
     # Cookie settings
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
+
     # HSTS settings
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    
+
     # Additional security headers
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
