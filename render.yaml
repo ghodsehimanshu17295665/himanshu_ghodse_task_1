@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: himanshu-task-management
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn task.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: taskmanagement
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: DEBUG
+        value: False
+      # Add your email settings here (use Render's environment secrets for sensitive data)
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.smtp.EmailBackend"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USE_TLS
+        value: True
+      - key: EMAIL_HOST_USER
+        value: "hghodse@bestpeers.com"
+      # EMAIL_HOST_PASSWORD will be set manually in Render dashboard
+databases:
+  - name: taskmanagement
+    plan: free
