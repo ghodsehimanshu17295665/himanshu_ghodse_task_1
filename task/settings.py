@@ -97,7 +97,8 @@ if os.environ.get('DATABASE_URL'):
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
             conn_max_age=600,
-            ssl_require=True
+            ssl_require=True,
+            conn_health_checks=True,
         )
     }
 else:
@@ -108,7 +109,12 @@ else:
             'USER': os.getenv('POSTGRES_USER', 'taskuser'),
             'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'securepassword123'),
             'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
-            'PORT': os.getenv('POSTGRES_PORT', '5432')
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+            'OPTIONS': {
+                'sslmode': 'require',  # Force SSL
+                'connect_timeout': 5,  # 5-second timeout
+            },
+            'CONN_MAX_AGE': 600,
         }
     }
 
