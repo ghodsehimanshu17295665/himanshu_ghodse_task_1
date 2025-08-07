@@ -16,9 +16,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Add at the top with other imports
-from urllib.parse import urlparse
-
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

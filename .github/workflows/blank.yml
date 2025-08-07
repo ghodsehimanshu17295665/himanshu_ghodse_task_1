@@ -60,6 +60,9 @@ jobs:
       POSTGRES_PASSWORD: securepassword123
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
+      DJANGO_SETTINGS_MODULE: task.settings
+      PYTHONUNBUFFERED: 1
+      DJANGO_SECURE_SSL_REDIRECT: '0' 
 
     steps:
       - uses: actions/checkout@v3
@@ -87,4 +90,4 @@ jobs:
 
       - name: Run Django tests
         run: |
-          python manage.py test
+          python manage.py test --settings=task.test_settings
