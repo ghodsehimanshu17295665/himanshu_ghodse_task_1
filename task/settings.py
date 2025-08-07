@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 import sys
-import dj_database_url
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -118,7 +117,7 @@ else:
         }
     }
 
-if "test" in sys.argv or os.getenv("CI", "").lower() == "true":
+if "test" in sys.argv:
     DATABASES["default"]["OPTIONS"] = {"sslmode": "disable"}
 
 # Password validation
