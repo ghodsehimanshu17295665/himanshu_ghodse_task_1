@@ -49,6 +49,7 @@ jobs:
 
     env:
       CI: "true"
+      DEBUG: "True" 
       SECRET_KEY: "test-secret-key"
       EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
       POSTGRES_DB: taskmanagement
