@@ -112,15 +112,8 @@ else:
         }
     }
 
-# Special CI/Test Configuration (ADD THIS NEW BLOCK)
 if "test" in sys.argv or os.getenv("CI", "").lower() == "true":
-    DATABASES["default"].update(
-        {
-            "NAME": "test_" + DATABASES["default"]["NAME"],
-            "OPTIONS": {"sslmode": "disable"},  # Disable SSL for tests
-        }
-    )
-
+    DATABASES["default"]["OPTIONS"] = {"sslmode": "disable"}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

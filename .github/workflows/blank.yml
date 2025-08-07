@@ -31,11 +31,12 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_DB: test_taskmanagement  # Changed to test_ prefix
+          POSTGRES_DB: taskmanagement
           POSTGRES_USER: taskuser
           POSTGRES_PASSWORD: securepassword123
         ports:
@@ -47,15 +48,10 @@ jobs:
           --health-retries=5
 
     env:
-      CI: "true"  # Added to trigger test settings
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      EMAIL_BACKEND: ${{ secrets.EMAIL_BACKEND }}
-      EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
-      EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
-      EMAIL_USE_TLS: ${{ secrets.EMAIL_USE_TLS }}
-      EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-      EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-      POSTGRES_DB: test_taskmanagement  # Changed to match service
+      CI: "true"
+      SECRET_KEY: "test-secret-key"
+      EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
+      POSTGRES_DB: taskmanagement
       POSTGRES_USER: taskuser
       POSTGRES_PASSWORD: securepassword123
       POSTGRES_HOST: localhost
@@ -82,9 +78,8 @@ jobs:
           done
           echo "Database connection established!"
 
-      - name: Collect static files
-        run: python manage.py collectstatic --noinput
+      - name: Run migrations
+        run: python manage.py migrate
 
       - name: Run Django tests
-        run: |
-          python manage.py test
+        run: python manage.py test --verbosity=2
