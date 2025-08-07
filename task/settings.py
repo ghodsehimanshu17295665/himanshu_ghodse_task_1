@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 import sys
+import dj_database_url
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -34,6 +35,10 @@ DEBUG = os.getenv("DEBUG", "False") == "True" or os.getenv("CI", "") == "true"
 
 # ALLOWED_HOSTS will be set dynamically based on environment
 ALLOWED_HOSTS = []
+
+# Add localhost and 127.0.0.1 for development or CI
+if DEBUG or os.getenv("CI", "").lower() == "true":
+    ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
 
 # Add Render's hostname and your custom domain when available
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
