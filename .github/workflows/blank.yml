@@ -110,6 +110,14 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/app
+
+            # Create env variables dynamically
+            echo "DEBUG=False" > .env
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            echo "POSTGRES_DB=taskmanagement" >> .env
+            echo "POSTGRES_USER=taskuser" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+
             docker-compose down || true
             docker-compose up -d --build
             docker image prune -f
