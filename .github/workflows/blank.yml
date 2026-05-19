@@ -109,14 +109,22 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/app
+            set -e
 
-            # Create env variables dynamically
-            echo "DEBUG=False" > .env
-            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-            echo "POSTGRES_DB=taskmanagement" >> .env
-            echo "POSTGRES_USER=taskuser" >> .env
-            echo "POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            cd ~/app || exit 1
+
+            echo "Creating .env..."
+
+            cat <<EOF > .env
+            DEBUG=False
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            POSTGRES_DB=taskmanagement
+            POSTGRES_USER=taskuser
+            POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}
+            EOF
+
+            echo "Checking .env:"
+            cat .env
 
             docker-compose down || true
             docker-compose up -d --build
