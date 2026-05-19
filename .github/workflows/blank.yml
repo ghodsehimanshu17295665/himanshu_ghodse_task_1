@@ -111,7 +111,7 @@ jobs:
             echo "Creating .env..."
 
             #  SAFE METHOD (handles ANY special characters)
-            printf "DEBUG=False\n" > .env
+            printf "DEBUG=True\n" > .env
             printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> .env
             printf "POSTGRES_DB=taskmanagement\n" >> .env
             printf "POSTGRES_USER=taskuser\n" >> .env
