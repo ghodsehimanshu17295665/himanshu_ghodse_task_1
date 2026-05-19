@@ -110,12 +110,12 @@ jobs:
 
             echo "Creating .env..."
 
-            # The SAFEST METHOD to create .env is to echo each line separately to avoid issues with special characters
-            echo "DEBUG=False" > .env
-            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-            echo "POSTGRES_DB=taskmanagement" >> .env
-            echo "POSTGRES_USER=taskuser" >> .env
-            echo "POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            #  SAFE METHOD (handles ANY special characters)
+            printf "DEBUG=False\n" > .env
+            printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> .env
+            printf "POSTGRES_DB=taskmanagement\n" >> .env
+            printf "POSTGRES_USER=taskuser\n" >> .env
+            printf "POSTGRES_PASSWORD=%s\n" '${{ secrets.DB_PASSWORD }}' >> .env
 
             echo "Checking .env:"
             cat .env
