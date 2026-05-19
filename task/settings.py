@@ -33,7 +33,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True" or os.getenv("CI", "") == "true"
 
 # ALLOWED_HOSTS will be set dynamically based on environment
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Add localhost and 127.0.0.1 for development or CI
 if DEBUG or os.getenv("CI", "").lower() == "true":
@@ -112,7 +113,7 @@ else:
             "NAME": os.getenv("POSTGRES_DB", "taskmanagement"),
             "USER": os.getenv("POSTGRES_USER", "taskuser"),
             "PASSWORD": os.getenv("POSTGRES_PASSWORD", "securepassword123"),
-            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+            "HOST": os.getenv("POSTGRES_HOST", "db"),
             "PORT": os.getenv("POSTGRES_PORT", "5432"),
         }
     }
