@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . /app/
 
 #  Install netcat + dependencies
-RUN apt-get update && apt-get install -y netcat
+RUN apt-get update && apt-get install -y netcat-openbsd
 
 RUN pip install -r requirements.txt
 
