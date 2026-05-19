@@ -184,7 +184,11 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 # Security settings for production
-if not DEBUG:
+
+ENABLE_HTTPS = os.getenv("ENABLE_HTTPS", "False") == "True"
+
+# if not DEBUG:
+if ENABLE_HTTPS:
     # Ensure HTTPS is used
     SECURE_SSL_REDIRECT = True
 
