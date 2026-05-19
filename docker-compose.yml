@@ -13,6 +13,7 @@ services:
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
+    restart: always
 
   db:
     image: postgres:15
@@ -22,6 +23,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - webnet
+    restart: always 
 
 networks:
   webnet:
