@@ -5,15 +5,15 @@ services:
     entrypoint: ./server-entrypoint.sh
     ports:
       - "8000:8000"
-    depends_on:
-      - db
+    # depends_on:
+    #   - db
     networks:
       - webnet
     env_file:
       - .env
-    environment:
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
+    # environment:
+    #   # POSTGRES_HOST: db
+    #   POSTGRES_PORT: 5432
     restart: always
 
   db:
