@@ -112,15 +112,11 @@ jobs:
           script: |
             set -e
 
-            echo "🚀 Starting deployment on EC2..."
+            echo "🚀 Starting deployment..."
 
-            # ==============================
-            # 📝 Create .env file
-            # ==============================
             ENV_PATH="/home/${{ secrets.EC2_USER }}/.env"
 
-            echo "Creating .env file..."
-
+            echo "Creating .env..."
             printf "DEBUG=False\n" > $ENV_PATH
             printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> $ENV_PATH
             printf "POSTGRES_DB=taskmanagement\n" >> $ENV_PATH
@@ -129,81 +125,56 @@ jobs:
             printf "POSTGRES_HOST=%s\n" '${{ secrets.POSTGRES_HOST }}' >> $ENV_PATH
             printf "POSTGRES_PORT=5432\n" >> $ENV_PATH
 
-            echo "✅ .env file created"
+            echo "✅ .env ready"
 
-            # ==============================
             # 🔐 Docker login
-            # ==============================
-            echo "Logging into DockerHub..."
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-            # ==============================
-            # 📥 Pull latest image
-            # ==============================
-            echo "Pulling latest image..."
+            # 📥 Pull image
             docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
-            # ==============================
-            # 🔍 DEBUG: Check port usage BEFORE cleanup
-            # ==============================
-            echo "Checking port 8000 usage BEFORE cleanup:"
-            sudo lsof -i :8000 || true
+            echo "🧹 FULL CLEANUP..."
 
-            # ==============================
-            # 🧹 CLEAN EVERYTHING PROPERLY
-            # ==============================
-            echo "Cleaning old containers and processes..."
+            # 🚨 STOP ALL CONTAINERS (IMPORTANT FIX)
+            docker stop $(docker ps -aq) || true
+            docker rm $(docker ps -aq) || true
 
-            # Remove container if exists
-            docker rm -f django-app || true
+            # 🚨 REMOVE NETWORKS (FIX PORT LOCK)
+            docker network prune -f || true
 
-            # Kill ANY process using port 8000 (STRONG FIX)
-            PID=$(sudo lsof -t -i:8000) || true
-
-            if [ ! -z "$PID" ]; then
-              echo "Killing process using port 8000: $PID"
-              sudo kill -9 $PID || true
-            fi
-
-            # Extra safety
+            # 🚨 FORCE FREE PORT
             sudo fuser -k 8000/tcp || true
 
-            # Wait for port to fully release
+            # 🚨 KILL DOCKER PROXY (VERY IMPORTANT)
+            sudo pkill -f docker-proxy || true
+
+            # Wait
             sleep 5
 
-            # ==============================
-            # 🔍 DEBUG: Confirm port is free
-            # ==============================
-            echo "Checking port 8000 AFTER cleanup:"
-            sudo lsof -i :8000 || echo "✅ Port 8000 is free"
+            echo "🔍 Checking port..."
+            sudo lsof -i :8000 || echo "✅ Port is free"
 
-            # ==============================
-            # 🧼 Cleanup unused Docker resources
-            # ==============================
-            docker system prune -f || true
+            # 🧼 CLEAN SYSTEM
+            docker system prune -af || true
 
-            # ==============================
-            # 🏃 Run new container
-            # ==============================
-            echo "Starting new container..."
+            echo "🚀 Starting container..."
 
+            # ✅ FORCE IPv4 binding (CRITICAL FIX)
             docker run -d \
               --name django-app \
-              -p 8000:8000 \
+              -p 0.0.0.0:8000:8000 \
               --env-file $ENV_PATH \
               --restart always \
               ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
-            # ==============================
-            # 🔍 VERIFY DEPLOYMENT
-            # ==============================
-            echo "Running containers:"
+            echo "📦 Running containers:"
             docker ps
 
-            echo "Checking logs:"
-            docker logs django-app --tail 20 || true
+            echo "📜 Logs:"
+            docker logs django-app --tail 20
 
-            echo "🎉 Deployment successful!"
+            echo "🎉 Deployment SUCCESS!"
+
 
   # deploy:
   #   runs-on: ubuntu-latest
