@@ -15,10 +15,12 @@ from .views import (
     TaskStatusUpdateView,
     TaskUpdateView,
     UserListView,
+    health,
 )
 
 urlpatterns = [
     path("", Home.as_view(), name="home_page"),
+    path("health/", health, name="health"),
     path("signup/page/", SignupView.as_view(), name="signup"),
     path("login/page/", LoginView.as_view(), name="login"),
     path("logout/page/", LogoutView.as_view(), name="logout"),

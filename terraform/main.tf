@@ -1,4 +1,4 @@
-#  1. Provider (ALWAYS TOP)
+# 1. Provider
 provider "aws" {
   region = "us-east-1"
 }
@@ -44,8 +44,14 @@ resource "aws_lb_target_group" "app_tg" {
   vpc_id   = "vpc-09d6552853b421e99"
 
   health_check {
-    path = "/"
-    port = "8000"
+    path                = "/health/"
+    port                = "8000"
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 15
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
   }
 }
 
