@@ -87,18 +87,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      #  Login DockerHub (GitHub runner)
+      #  Login to DockerHub (GitHub Runner)
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      #  Build Image
+      #  Build Docker Image
       - name: Build Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/django-app:latest .
 
-      #  Push Image
+      #  Push Image to DockerHub
       - name: Push Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
@@ -114,10 +114,12 @@ jobs:
 
             echo " Starting deployment on EC2..."
 
-            #  Create .env file on EC2
-            echo "Creating .env on EC2..."
-
+            # ==============================
+            #  Create .env file safely
+            # ==============================
             ENV_PATH="/home/${{ secrets.EC2_USER }}/.env"
+
+            echo "Creating .env file..."
 
             printf "DEBUG=False\n" > $ENV_PATH
             printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> $ENV_PATH
@@ -129,20 +131,39 @@ jobs:
 
             echo " .env file created"
 
-            #  Login DockerHub on EC2
-            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            # ==============================
+            #  Docker login (secure)
+            # ==============================
+            echo "Logging into DockerHub..."
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+            # ==============================
             #  Pull latest image
+            # ==============================
+            echo "Pulling latest image..."
             docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
-            #  Stop old container (if exists)
-            docker stop django-app || true
-            docker rm django-app || true
+            # ==============================
+            #  Clean old containers
+            # ==============================
+            echo "Cleaning old containers..."
 
-            #  Optional: remove unused images
-            docker image prune -f
+            # Remove only our app container (best practice)
+            docker rm -f django-app || true
 
+            #  Free port 8000 (IMPORTANT FIX)
+            sudo fuser -k 8000/tcp || true
+
+            # ==============================
+            #  Cleanup unused images
+            # ==============================
+            docker image prune -f || true
+
+            # ==============================
             #  Run new container
+            # ==============================
+            echo "Starting new container..."
+
             docker run -d \
               --name django-app \
               -p 8000:8000 \
@@ -150,7 +171,14 @@ jobs:
               --restart always \
               ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
-            echo "Deployment successful on EC2!"
+            # ==============================
+            #  Verify deployment
+            # ==============================
+            echo "Checking running containers..."
+            docker ps
+
+            echo " Deployment successful!"
+
 
   # deploy:
   #   runs-on: ubuntu-latest
