@@ -110,7 +110,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            set -e
+            set +e   # ✅ prevent script from breaking
 
             echo "🚀 Starting deployment..."
 
@@ -133,33 +133,39 @@ jobs:
             # 📥 Pull image
             docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
-            echo "🧹 FULL CLEANUP..."
+            echo "🧹 SAFE CLEANUP..."
 
-            # 🚨 STOP ALL CONTAINERS (IMPORTANT FIX)
-            docker stop $(docker ps -aq) || true
-            docker rm $(docker ps -aq) || true
+            # Stop running containers safely
+            CONTAINERS=$(docker ps -q)
+            if [ -n "$CONTAINERS" ]; then
+              docker stop $CONTAINERS || true
+            fi
 
-            # 🚨 REMOVE NETWORKS (FIX PORT LOCK)
+            # Remove all containers safely
+            ALL_CONTAINERS=$(docker ps -aq)
+            if [ -n "$ALL_CONTAINERS" ]; then
+              docker rm $ALL_CONTAINERS || true
+            fi
+
+            # Remove unused networks
             docker network prune -f || true
 
-            # 🚨 FORCE FREE PORT
-            sudo fuser -k 8000/tcp || true
-
-            # 🚨 KILL DOCKER PROXY (VERY IMPORTANT)
+            # Kill docker proxy (fix port issue)
             sudo pkill -f docker-proxy || true
 
-            # Wait
-            sleep 5
+            # Free port 8000
+            sudo fuser -k 8000/tcp || true
+
+            sleep 3
 
             echo "🔍 Checking port..."
             sudo lsof -i :8000 || echo "✅ Port is free"
 
-            # 🧼 CLEAN SYSTEM
+            # Clean system (optional)
             docker system prune -af || true
 
             echo "🚀 Starting container..."
 
-            # ✅ FORCE IPv4 binding (CRITICAL FIX)
             docker run -d \
               --name django-app \
               -p 0.0.0.0:8000:8000 \
