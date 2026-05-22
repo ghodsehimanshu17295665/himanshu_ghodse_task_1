@@ -98,26 +98,53 @@ WSGI_APPLICATION = "task.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 
+# # Database Configuration
+# if os.environ.get("DATABASE_URL"):
+#     import dj_database_url
+
+#     db_from_env = dj_database_url.config(
+#         conn_max_age=600, ssl_require=True, conn_health_checks=True
+#     )
+#     DATABASES = {"default": db_from_env}
+# else:
+#     DATABASES = {
+#         "default": {
+#             "ENGINE": "django.db.backends.postgresql",
+#             "NAME": os.getenv("POSTGRES_DB", "taskmanagement"),
+#             "USER": os.getenv("POSTGRES_USER", "taskuser"),
+#             "PASSWORD": os.getenv("POSTGRES_PASSWORD", "securepassword123"),
+#             "HOST": os.getenv("POSTGRES_HOST", "db"),
+#             "PORT": os.getenv("POSTGRES_PORT", "5432"),
+#         }
+#     }
+
+# if "test" in sys.argv:
+#     DATABASES["default"]["OPTIONS"] = {"sslmode": "disable"}
+
 # Database Configuration
 if os.environ.get("DATABASE_URL"):
     import dj_database_url
 
-    db_from_env = dj_database_url.config(
-        conn_max_age=600, ssl_require=True, conn_health_checks=True
-    )
-    DATABASES = {"default": db_from_env}
+    DATABASES = {
+        "default": dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True,
+            conn_health_checks=True,
+        )
+    }
 else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("POSTGRES_DB", "taskmanagement"),
-            "USER": os.getenv("POSTGRES_USER", "taskuser"),
-            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "securepassword123"),
-            "HOST": os.getenv("POSTGRES_HOST", "db"),
-            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+            "NAME": os.getenv("DB_NAME", "taskmanagement"),
+            "USER": os.getenv("DB_USER", "taskuser"),
+            "PASSWORD": os.getenv("DB_PASSWORD", "securepassword123"),
+            "HOST": os.getenv("DB_HOST"),   # FIXED
+            "PORT": os.getenv("DB_PORT", "5432"),
         }
     }
 
+# Disable SSL in tests
 if "test" in sys.argv:
     DATABASES["default"]["OPTIONS"] = {"sslmode": "disable"}
 

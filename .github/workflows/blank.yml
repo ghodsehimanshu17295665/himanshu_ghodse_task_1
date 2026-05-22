@@ -117,11 +117,11 @@ jobs:
             echo "Creating .env..."
             printf "DEBUG=False\n" > $ENV_PATH
             printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> $ENV_PATH
-            printf "POSTGRES_DB=taskmanagement\n" >> $ENV_PATH
-            printf "POSTGRES_USER=taskuser\n" >> $ENV_PATH
-            printf "POSTGRES_PASSWORD=%s\n" '${{ secrets.DB_PASSWORD }}' >> $ENV_PATH
-            printf "POSTGRES_HOST=%s\n" '${{ secrets.POSTGRES_HOST }}' >> $ENV_PATH
-            printf "POSTGRES_PORT=5432\n" >> $ENV_PATH
+            printf "DB_NAME=taskmanagement\n" >> $ENV_PATH
+            printf "DB_USER=taskuser\n" >> $ENV_PATH
+            printf "DB_PASSWORD=%s\n" '${{ secrets.DB_PASSWORD }}' >> $ENV_PATH
+            printf "DB_HOST=%s\n" '${{ secrets.POSTGRES_HOST }}' >> $ENV_PATH
+            printf "DB_PORT=5432\n" >> $ENV_PATH
 
             echo "✅ .env ready"
 
