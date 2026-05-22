@@ -87,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      #  Login DockerHub
+      #  Login DockerHub (GitHub runner)
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
@@ -112,21 +112,46 @@ jobs:
           script: |
             set -e
 
+            echo " Starting deployment on EC2..."
+
+            #  Create .env file on EC2
+            echo "Creating .env on EC2..."
+
+            ENV_PATH="/home/${{ secrets.EC2_USER }}/.env"
+
+            printf "DEBUG=False\n" > $ENV_PATH
+            printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> $ENV_PATH
+            printf "POSTGRES_DB=taskmanagement\n" >> $ENV_PATH
+            printf "POSTGRES_USER=taskuser\n" >> $ENV_PATH
+            printf "POSTGRES_PASSWORD=%s\n" '${{ secrets.DB_PASSWORD }}' >> $ENV_PATH
+            printf "POSTGRES_HOST=%s\n" '${{ secrets.POSTGRES_HOST }}' >> $ENV_PATH
+            printf "POSTGRES_PORT=5432\n" >> $ENV_PATH
+
+            echo " .env file created"
+
             #  Login DockerHub on EC2
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
+            #  Pull latest image
             docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
+            #  Stop old container (if exists)
             docker stop django-app || true
             docker rm django-app || true
 
+            #  Optional: remove unused images
+            docker image prune -f
+
+            #  Run new container
             docker run -d \
               --name django-app \
               -p 8000:8000 \
-              --env-file /home/${{ secrets.EC2_USER }}/.env \
+              --env-file $ENV_PATH \
+              --restart always \
               ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
             echo "Deployment successful on EC2!"
+
   # deploy:
   #   runs-on: ubuntu-latest
   #   needs: test
