@@ -1,6 +1,7 @@
 services:
   web:
-    build: .
+    image: ghodsehimanshu17295665/django-app:latest
+    # build: .
     entrypoint: ./server-entrypoint.sh
     ports:
       - "8000:8000"

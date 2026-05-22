@@ -85,19 +85,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Copy project to EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "."
-          target: "~/app"
-
-      - name: Deploy on EC2
+      - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -105,29 +93,66 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
+            docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
+            docker stop django-app || true
+            docker rm django-app || true
+            docker run -d \
+              --name django-app \
+              -p 8000:8000 \
+              --env-file /home/${{ secrets.EC2_USER }}/.env \
+              ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
-            cd ~/app || exit 1
 
-            echo "Creating .env..."
 
-            #  SAFE METHOD (handles ANY special characters)
-            printf "DEBUG=True\n" > .env
-            printf "ENABLE_HTTPS=False\n" >> .env
-            printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> .env
-            printf "POSTGRES_DB=taskmanagement\n" >> .env
-            printf "POSTGRES_USER=taskuser\n" >> .env
-            printf "POSTGRES_PASSWORD=%s\n" '${{ secrets.DB_PASSWORD }}' >> .env
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: test
+  #   if: github.ref == 'refs/heads/main'
 
-            echo "Checking .env:"
-            cat .env
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
 
-            echo "Stopping old containers..."
-            docker-compose down || true
+  #     - name: Copy project to EC2
+  #       uses: appleboy/scp-action@master
+  #       with:
+  #         host: ${{ secrets.EC2_HOST }}
+  #         username: ${{ secrets.EC2_USER }}
+  #         key: ${{ secrets.EC2_SSH_KEY }}
+  #         source: "."
+  #         target: "~/app"
 
-            echo "Building & starting containers..."
-            docker-compose up -d --build
+  #     - name: Deploy on EC2
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.EC2_HOST }}
+  #         username: ${{ secrets.EC2_USER }}
+  #         key: ${{ secrets.EC2_SSH_KEY }}
+  #         script: |
+  #           set -e
 
-            echo "Cleaning unused images..."
-            docker image prune -f
+  #           cd ~/app || exit 1
 
-            echo "Deployment successful on EC2!"
+  #           echo "Creating .env..."
+
+  #           #  SAFE METHOD (handles ANY special characters)
+  #           printf "DEBUG=True\n" > .env
+  #           printf "ENABLE_HTTPS=False\n" >> .env
+  #           printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> .env
+  #           printf "POSTGRES_DB=taskmanagement\n" >> .env
+  #           printf "POSTGRES_USER=taskuser\n" >> .env
+  #           printf "POSTGRES_PASSWORD=%s\n" '${{ secrets.DB_PASSWORD }}' >> .env
+
+  #           echo "Checking .env:"
+  #           cat .env
+
+  #           echo "Stopping old containers..."
+  #           docker-compose down || true
+
+  #           echo "Building & starting containers..."
+  #           docker-compose up -d --build
+
+  #           echo "Cleaning unused images..."
+  #           docker image prune -f
+
+  #           echo "Deployment successful on EC2!"

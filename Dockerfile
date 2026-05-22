@@ -1,14 +1,22 @@
-FROM python:3.9
+FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY . /app/
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y netcat-openbsd && \
+    rm -rf /var/lib/apt/lists/*
 
-#  Install netcat + dependencies
-RUN apt-get update && apt-get install -y netcat-openbsd
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install -r requirements.txt
+# Copy app code
+COPY . .
 
+# Make entrypoint executable
 RUN chmod +x /app/server-entrypoint.sh
 
 EXPOSE 8000
+
+CMD ["sh", "/app/server-entrypoint.sh"]
