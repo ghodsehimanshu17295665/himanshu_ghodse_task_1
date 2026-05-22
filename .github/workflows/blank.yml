@@ -87,22 +87,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      #  Login to DockerHub (GitHub Runner)
+      # 🔐 Login to DockerHub (GitHub Runner)
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      #  Build Docker Image
+      # 🏗 Build Docker Image
       - name: Build Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/django-app:latest .
 
-      #  Push Image to DockerHub
+      # 📤 Push Image
       - name: Push Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
-      #  Deploy to EC2
+      # 🚀 Deploy to EC2
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -112,10 +112,10 @@ jobs:
           script: |
             set -e
 
-            echo " Starting deployment on EC2..."
+            echo "🚀 Starting deployment on EC2..."
 
             # ==============================
-            #  Create .env file safely
+            # 📝 Create .env file
             # ==============================
             ENV_PATH="/home/${{ secrets.EC2_USER }}/.env"
 
@@ -129,38 +129,61 @@ jobs:
             printf "POSTGRES_HOST=%s\n" '${{ secrets.POSTGRES_HOST }}' >> $ENV_PATH
             printf "POSTGRES_PORT=5432\n" >> $ENV_PATH
 
-            echo " .env file created"
+            echo "✅ .env file created"
 
             # ==============================
-            #  Docker login (secure)
+            # 🔐 Docker login
             # ==============================
             echo "Logging into DockerHub..."
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
             # ==============================
-            #  Pull latest image
+            # 📥 Pull latest image
             # ==============================
             echo "Pulling latest image..."
             docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
             # ==============================
-            #  Clean old containers
+            # 🔍 DEBUG: Check port usage BEFORE cleanup
             # ==============================
-            echo "Cleaning old containers..."
+            echo "Checking port 8000 usage BEFORE cleanup:"
+            sudo lsof -i :8000 || true
 
-            # Remove only our app container (best practice)
+            # ==============================
+            # 🧹 CLEAN EVERYTHING PROPERLY
+            # ==============================
+            echo "Cleaning old containers and processes..."
+
+            # Remove container if exists
             docker rm -f django-app || true
 
-            #  Free port 8000 (IMPORTANT FIX)
+            # Kill ANY process using port 8000 (STRONG FIX)
+            PID=$(sudo lsof -t -i:8000) || true
+
+            if [ ! -z "$PID" ]; then
+              echo "Killing process using port 8000: $PID"
+              sudo kill -9 $PID || true
+            fi
+
+            # Extra safety
             sudo fuser -k 8000/tcp || true
 
-            # ==============================
-            #  Cleanup unused images
-            # ==============================
-            docker image prune -f || true
+            # Wait for port to fully release
+            sleep 5
 
             # ==============================
-            #  Run new container
+            # 🔍 DEBUG: Confirm port is free
+            # ==============================
+            echo "Checking port 8000 AFTER cleanup:"
+            sudo lsof -i :8000 || echo "✅ Port 8000 is free"
+
+            # ==============================
+            # 🧼 Cleanup unused Docker resources
+            # ==============================
+            docker system prune -f || true
+
+            # ==============================
+            # 🏃 Run new container
             # ==============================
             echo "Starting new container..."
 
@@ -172,13 +195,15 @@ jobs:
               ${{ secrets.DOCKER_USERNAME }}/django-app:latest
 
             # ==============================
-            #  Verify deployment
+            # 🔍 VERIFY DEPLOYMENT
             # ==============================
-            echo "Checking running containers..."
+            echo "Running containers:"
             docker ps
 
-            echo " Deployment successful!"
+            echo "Checking logs:"
+            docker logs django-app --tail 20 || true
 
+            echo "🎉 Deployment successful!"
 
   # deploy:
   #   runs-on: ubuntu-latest
