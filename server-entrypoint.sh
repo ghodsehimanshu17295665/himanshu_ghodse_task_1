@@ -2,9 +2,9 @@
 
 set -e
 
-echo "Waiting for PostgreSQL at $POSTGRES_HOST:$POSTGRES_PORT..."
+echo "Waiting for PostgreSQL at $DB_HOST:$DB_PORT..."
 
-while ! nc -z $POSTGRES_HOST $POSTGRES_PORT; do
+while ! nc -z "$DB_HOST" "$DB_PORT"; do
   echo "Postgres not ready... retrying"
   sleep 2
 done
@@ -19,5 +19,4 @@ python manage.py collectstatic --noinput
 
 echo "Starting server..."
 
-# PRODUCTION server (better than runserver)
 exec gunicorn core.wsgi:application --bind 0.0.0.0:8000
