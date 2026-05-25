@@ -135,8 +135,8 @@ if os.environ.get("DATABASE_URL"):
 else:
     DB_OPTIONS = {}
 
-    # Enable SSL only in production/RDS
-    if os.getenv("CI") != "true":
+    # Enable SSL  only for AWS RDS production
+    if os.getenv("ENABLE_DB_SSL") == "True":
         DB_OPTIONS = {
             "sslmode": "require",
         }
