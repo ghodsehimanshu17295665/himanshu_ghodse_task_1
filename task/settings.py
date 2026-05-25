@@ -133,6 +133,14 @@ if os.environ.get("DATABASE_URL"):
         )
     }
 else:
+    DB_OPTIONS = {}
+
+    # Enable SSL only in production/RDS
+    if os.getenv("CI") != "true":
+        DB_OPTIONS = {
+            "sslmode": "require",
+        }
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -141,14 +149,9 @@ else:
             "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
             "HOST": os.getenv("POSTGRES_HOST"),
             "PORT": os.getenv("POSTGRES_PORT"),
-            "OPTIONS": {
-                "sslmode": "require",
-            },
+            "OPTIONS": DB_OPTIONS,
         }
     }
-# Disable SSL in tests
-if "test" in sys.argv:
-    DATABASES["default"]["OPTIONS"] = {"sslmode": "disable"}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
