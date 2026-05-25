@@ -119,7 +119,7 @@ jobs:
             printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> $ENV_PATH
 
             printf "POSTGRES_DB=taskmanagement\n" >> $ENV_PATH
-            printf "POSTGRES_USER=taskuser\n" >> $ENV_PATH
+            printf "POSTGRES_USER=postgres\n" >> $ENV_PATH
             printf "POSTGRES_PASSWORD=%s\n" '${{ secrets.DB_PASSWORD }}' >> $ENV_PATH
             printf "POSTGRES_HOST=%s\n" '${{ secrets.POSTGRES_HOST }}' >> $ENV_PATH
             printf "POSTGRES_PORT=5432\n" >> $ENV_PATH
