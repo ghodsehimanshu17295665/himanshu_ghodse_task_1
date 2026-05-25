@@ -9,11 +9,11 @@ from .utils import (
     send_task_status_update_email,
     send_task_update_email,
 )
-from django.http import JsonResponse
+from django.http import HttpResponse
 
 
-def health(request):
-    return JsonResponse({"status": "ok"})
+def health_check(request):
+    return HttpResponse("OK")
 
 
 # Home page
