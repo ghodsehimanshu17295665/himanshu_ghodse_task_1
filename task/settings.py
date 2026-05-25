@@ -136,14 +136,13 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("DB_NAME", "taskmanagement"),
-            "USER": os.getenv("DB_USER", "taskuser"),
-            "PASSWORD": os.getenv("DB_PASSWORD", "securepassword123"),
-            "HOST": os.getenv("DB_HOST"),   # FIXED
-            "PORT": os.getenv("DB_PORT", "5432"),
+            "NAME": os.getenv("POSTGRES_DB"),
+            "USER": os.getenv("POSTGRES_USER"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+            "HOST": os.getenv("POSTGRES_HOST"),
+            "PORT": os.getenv("POSTGRES_PORT"),
         }
     }
-
 # Disable SSL in tests
 if "test" in sys.argv:
     DATABASES["default"]["OPTIONS"] = {"sslmode": "disable"}

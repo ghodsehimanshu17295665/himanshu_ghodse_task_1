@@ -1,49 +1,15 @@
 services:
   web:
+    stdin_open: true
+    tty: true
     image: ghodsehimanshu17295665/django-app:latest
-    entrypoint: ./server-entrypoint.sh
+    container_name: django-app
+
     ports:
       - "8000:8000"
-    networks:
-      - webnet
+
     env_file:
       - .env
+
     restart: always
-
-networks:
-  webnet:
-
-
-# services:
-#   web:
-#     image: ghodsehimanshu17295665/django-app:latest
-#     # build: .
-#     entrypoint: ./server-entrypoint.sh
-#     ports:
-#       - "8000:8000"
-#     # depends_on:
-#     #   - db
-#     networks:
-#       - webnet
-#     env_file:
-#       - .env
-#     # environment:
-#     #   # POSTGRES_HOST: db
-#     #   POSTGRES_PORT: 5432
-#     restart: always
-
-#   db:
-#     image: postgres:15
-#     env_file:
-#       - .env
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data
-#     networks:
-#       - webnet
-#     restart: always 
-
-# networks:
-#   webnet:
-
-# volumes:
-#   postgres_data:
+  

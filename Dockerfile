@@ -19,4 +19,5 @@ RUN chmod +x /app/server-entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["sh", "/app/server-entrypoint.sh"]
+# CMD ["sh", "/app/server-entrypoint.sh"]
+ENTRYPOINT ["/app/server-entrypoint.sh"]
