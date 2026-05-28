@@ -10,12 +10,12 @@ jobs:
   black:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v3       # Repo ka code download karta hai runner pe
+      - uses: actions/setup-python@v4   # Python environment setup
         with:
           python-version: "3.10"
       - run: pip install black~=23.0
-      - run: black .
+      - run: black .    # code format
 
   flake8:
     runs-on: ubuntu-latest
@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.10"
       - run: pip install flake8
-      - run: flake8
+      - run: flake8              # code quality (Code errors check karta hai)
 
   test:
     runs-on: ubuntu-latest
@@ -40,7 +40,7 @@ jobs:
           POSTGRES_PASSWORD: securepassword123
         ports:
           - 5432:5432
-        options: >-
+        options: >-         # Health check for PostgreSQL(Check karta hai DB ready hai ya nahi)
           --health-cmd="pg_isready -U taskuser"
           --health-interval=10s
           --health-timeout=5s
@@ -85,70 +85,44 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v3
+      # Checkout project code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # Login to DockerHub (GitHub Runner)
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
+      # Configure AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
       # Build Docker Image
-      - name: Build Image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/django-app:latest .
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ secrets.ECR_REPOSITORY }} .
 
-      # Push Image
-      - name: Push Image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/django-app:latest
+      # Tag Docker Image
+      - name: Tag Docker Image
+        run: |
+          docker tag ${{ secrets.ECR_REPOSITORY }}:latest \
+          ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
 
-      # Deploy to EC2
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            echo "Starting deployment..."
+      # Push Docker Image to ECR
+      - name: Push Docker Image to ECR
+        run: |
+          docker push \
+          ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
 
-            ENV_PATH="/home/${{ secrets.EC2_USER }}/.env"
-
-            echo "Creating .env..."
-            printf "DEBUG=False\n" > $ENV_PATH
-            printf "SECRET_KEY=%s\n" '${{ secrets.SECRET_KEY }}' >> $ENV_PATH
-
-            printf "POSTGRES_DB=taskmanagement\n" >> $ENV_PATH
-            printf "POSTGRES_USER=postgres\n" >> $ENV_PATH
-            printf "POSTGRES_PASSWORD=%s\n" '${{ secrets.DB_PASSWORD }}' >> $ENV_PATH
-            printf "POSTGRES_HOST=%s\n" '${{ secrets.POSTGRES_HOST }}' >> $ENV_PATH
-            printf "POSTGRES_PORT=5432\n" >> $ENV_PATH
-
-            echo " .env ready"
-
-            # Docker login
-            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-            # Pull latest image
-            docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
-
-            echo " Stopping old container (if exists)..."
-            docker stop django-app || true
-            docker rm django-app || true
-
-            echo " Starting new container..."
-
-            docker run -d \
-              --name django-app \
-              -p 8000:8000 \
-              --env-file $ENV_PATH \
-              --restart always \
-              ${{ secrets.DOCKER_USERNAME }}/django-app:latest
-
-            echo " Running containers:"
-            docker ps
-
-            echo " Logs:"
-            docker logs django-app --tail 20
-
-            echo "🎉 Deployment SUCCESS!"
+      # Force ECS Service Redeployment
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --force-new-deployment
