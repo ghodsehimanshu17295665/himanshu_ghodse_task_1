@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3       # Repo ka code download karta hai runner pe
-      - uses: actions/setup-python@v4   # Python environment setup
+      - uses: actions/setup-python@v4   # Python environment setup karta hai
         with:
           python-version: "3.10"
       - run: pip install black~=23.0
