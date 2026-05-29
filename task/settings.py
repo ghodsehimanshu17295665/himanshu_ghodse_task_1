@@ -34,7 +34,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True" or os.getenv("CI", "") == "true"
 
 # ALLOWED_HOSTS will be set dynamically based on environment
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*', 'django-app-alb-457036418.us-east-1.elb.amazonaws.com']
 
 # Add localhost and 127.0.0.1 for development or CI
 if DEBUG or os.getenv("CI", "").lower() == "true":
