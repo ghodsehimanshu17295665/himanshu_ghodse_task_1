@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
+
 # import sys
 from pathlib import Path
 
@@ -34,20 +35,46 @@ DEBUG = os.getenv("DEBUG", "False") == "True" or os.getenv("CI", "") == "true"
 
 # ALLOWED_HOSTS will be set dynamically based on environment
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['*', 'django-app-alb-457036418.us-east-1.elb.amazonaws.com']
+# ALLOWED_HOSTS = ['*', 'django-app-alb-457036418.us-east-1.elb.amazonaws.com']
 
-# Add localhost and 127.0.0.1 for development or CI
-if DEBUG or os.getenv("CI", "").lower() == "true":
-    ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
+# Allowed Hosts
+ALLOWED_HOSTS = [
+    "django-app-alb-457036418.us-east-1.elb.amazonaws.com",
+]
+
+if DEBUG:
+    ALLOWED_HOSTS.extend(
+        [
+            "django-app-alb-457036418.us-east-1.elb.amazonaws.com",
+            "localhost",
+            "127.0.0.1",
+            "0.0.0.0",
+        ]
+    )
+
+# # Add localhost and 127.0.0.1 for development or CI
+# if DEBUG or os.getenv("CI", "").lower() == "true":
+#     ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
 
 # Add Render's hostname and your custom domain when available
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# For local development
-if DEBUG:
-    ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
+# # For local development
+# if DEBUG:
+#     ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
+
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = [
+    "http://django-app-alb-457036418.us-east-1.elb.amazonaws.com",
+]
+
+# Trust AWS ALB headers
+SECURE_PROXY_SSL_HEADER = (
+    "HTTP_X_FORWARDED_PROTO",
+    "https",
+)
 
 
 # Application definition
@@ -217,23 +244,52 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 # Security settings for production
 
+# ENABLE_HTTPS = os.getenv("ENABLE_HTTPS", "False") == "True"
+
+# # if not DEBUG:
+# if ENABLE_HTTPS:
+#     # Ensure HTTPS is used
+#     SECURE_SSL_REDIRECT = True
+
+#     # Cookie settings
+#     SESSION_COOKIE_SECURE = True
+#     CSRF_COOKIE_SECURE = True
+
+#     # HSTS settings
+#     SECURE_HSTS_SECONDS = 31536000  # 1 year
+#     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+#     SECURE_HSTS_PRELOAD = True
+
+#     # Additional security headers
+#     SECURE_CONTENT_TYPE_NOSNIFF = True
+#     SECURE_BROWSER_XSS_FILTER = True
+#     X_FRAME_OPTIONS = "DENY"
+
+# Security settings for production
+
 ENABLE_HTTPS = os.getenv("ENABLE_HTTPS", "False") == "True"
 
-# if not DEBUG:
 if ENABLE_HTTPS:
-    # Ensure HTTPS is used
+    # Redirect HTTP → HTTPS
     SECURE_SSL_REDIRECT = True
 
-    # Cookie settings
+    # Secure cookies
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-    # HSTS settings
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    # HSTS
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-    # Additional security headers
+    # Security headers
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
+else:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]

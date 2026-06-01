@@ -78,9 +78,7 @@ class AssignTaskView(View):
     def get(self, request):
         users = User.objects.exclude(id=request.user.id)
         form = TaskForm()
-        return render(
-            request, "assign_task.html", {"form": form, "users": users}
-        )
+        return render(request, "assign_task.html", {"form": form, "users": users})
 
     def post(self, request):
         form = TaskForm(request.POST)
@@ -226,9 +224,7 @@ class TaskUpdateView(View):
         task = Task.objects.filter(id=pk, creator=user_id).first()
         if task:
             form = TaskForm(instance=task)
-            return render(
-                request, self.template_name, {"form": form, "task": task}
-            )
+            return render(request, self.template_name, {"form": form, "task": task})
         else:
             return redirect("task_list")
 
@@ -244,9 +240,7 @@ class TaskUpdateView(View):
                     task_title=updated_task.title,
                 )
             return redirect("task_list")
-        return render(
-            request, self.template_name, {"form": form, "task": task}
-        )
+        return render(request, self.template_name, {"form": form, "task": task})
 
 
 class TaskStatusUpdateView(View):

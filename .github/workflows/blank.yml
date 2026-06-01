@@ -32,7 +32,7 @@ jobs:
     needs: [black, flake8]
 
     services:
-      postgres:
+      postgres:     # GitHub creates temporary PostgreSQL container.
         image: postgres:13
         env:
           POSTGRES_DB: taskmanagement
@@ -58,7 +58,7 @@ jobs:
       POSTGRES_PORT: 5432
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3     # GitHub downloads your project.
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
@@ -82,22 +82,23 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' # Run only on main branch
 
     steps:
       # Checkout project code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3   # Downloads your latest code. 
 
       # Configure AWS Credentials
       - name: Configure AWS Credentials
+        # This is where GitHub connects to AWS.
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Login to Amazon ECR
+      # Login to Amazon ECR / (Docker Login to ECR)
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
