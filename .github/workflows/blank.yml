@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.10"
       - run: pip install black~=23.0
-      - run: black .    # code format
+      - run: black .    # code formatting (Code ko standard format me convert karta hai)
 
   flake8:
     runs-on: ubuntu-latest
@@ -85,9 +85,9 @@ jobs:
     if: github.ref == 'refs/heads/main' # Run only on main branch
 
     steps:
-      # Checkout project code
+      # Checkout project code (GitHub se latest code download karta hai)
       - name: Checkout code
-        uses: actions/checkout@v3   # Downloads your latest code. 
+        uses: actions/checkout@v3   # Downloads your latest code from GitHub.
 
       # Configure AWS Credentials
       - name: Configure AWS Credentials
@@ -114,13 +114,13 @@ jobs:
           docker tag ${{ secrets.ECR_REPOSITORY }}:latest \
           ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
 
-      # Push Docker Image to ECR
+      # Push Docker Image to ECR (Ab Docker Image ko AWS ECR me upload karta hai)
       - name: Push Docker Image to ECR
         run: |
           docker push \
           ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
 
-      # Force ECS Service Redeployment
+      # Force ECS Service Redeployment (ECS Service ko update karta hai taaki latest Docker Image use kare)
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
